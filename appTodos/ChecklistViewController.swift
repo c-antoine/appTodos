@@ -11,6 +11,7 @@ import UIKit
 class ChecklistViewController: UITableViewController {
 
     var dataList = [ChecklistItem]()
+    var isHidden = true
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,16 +48,13 @@ class ChecklistViewController: UITableViewController {
     
     
     func configureCheckmark(for cell: UITableViewCell, withItem item: ChecklistItem) {
-        if (item.checked == true) {
-            cell.accessoryType = .checkmark
-        }
-        else {
-            cell.accessoryType = .none
-        }
+        let subCell = cell as? CheckListItemCell
+        subCell?.checkLabel.isHidden = (item.checked)
     }
     
     func configureText(for cell: UITableViewCell, withItem item: ChecklistItem){
-        cell.textLabel?.text = item.text
+        let subCell = cell as? CheckListItemCell
+        subCell?.cellLabel.text = item.text
     }
 
     @IBAction func addDummyTodo(_ sender: Any) {
@@ -73,17 +71,42 @@ class ChecklistViewController: UITableViewController {
 }
 
 extension ChecklistViewController : AddItemViewControllerDelegate {
+    //Cancel
     func addItemViewControllerDidCancel(_ controller: AddItemViewController){
         dismiss(animated: true);
     }
-    func addItemViewController(_ controller: AddItemViewController, didFinishAddingItem item: ChecklistItem){
-        dataList.append(item);
-        let indexPath: IndexPath = IndexPath (row: dataList.count-1, section: 0);
-        tableView.insertRows(at: [indexPath], with: .automatic);
+    
+    //didFinishAddingItem
+    func addItemViewController(_ controller: AddItemViewController, didFinishAddingItem item: ChecklistItem)
+    {
+        dataList.append(item)
+        tableView.insertRows(at: [IndexPath(row: dataList.count-1, section: 0)], with: .automatic)
         dismiss(animated: true);
     }
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?){
-        
+    
+    //didFinishEditingItem
+    func addItemViewController(_ controller: AddItemViewController, didFinishEditingItem itemTemp: ChecklistItem) {
+        let indexItem = dataList.index(where:{ $0 === itemTemp })!
+        print(dataList[indexItem].text)
+        tableView.reloadRows(at: [IndexPath(row: indexItem, section: 0)], with: .automatic)
+        dismiss(animated: true)
+    }
+    
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let identifier = segue.identifier,
+            let navigationViewController = segue.destination as? UINavigationController,
+            let destination = navigationViewController.topViewController as? AddItemViewController {
+            if (identifier == "addItem") {
+                destination.delegate = self
+            } else if identifier == "editItem",
+                let cell = sender as? UITableViewCell {
+                destination.delegate = self
+                let indexPath = tableView.indexPath(for: cell)
+                let item = dataList[indexPath!.row]
+                destination.itemToEdit = item
+            }
+        }
     }
 }
 
