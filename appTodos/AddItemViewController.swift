@@ -23,7 +23,7 @@ class AddItemViewController: UITableViewController, UITextFieldDelegate {
             //Edition
             delegate?.addItemViewController(self, didFinishEditingItem: itemToEdit!)
         }
-                
+        //Dismiss
         dismiss(animated: true)
     }
     @IBAction func cancel() {
